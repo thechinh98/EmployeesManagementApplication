@@ -1,54 +1,46 @@
 package com.example.employeesmanagermentapplication.Activity
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.view.View
-import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.employeesmanagermentapplication.*
+import com.example.employeesmanagermentapplication.AdapterEmployeesList
+import com.example.employeesmanagermentapplication.Items.EmployeesReceive
+import com.example.employeesmanagermentapplication.R
+import com.example.employeesmanagermentapplication.ViewModel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
-
-
 
 
 class MainActivity : AppCompatActivity() {
-    private var viewAdapter = AdapterEmployeesList()
+    private var viewAdapter = AdapterEmployeesList(ArrayList<EmployeesReceive>())
+    private lateinit var mainViewModel: MainViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
-        var hdlr :Handler? = null
-        var progressStatus = 0
-        var isStarted = false
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        initialized()
+        bindingData()
+        pBar.visibility = View.GONE
+    }
+
+    private fun bindingData() {
+        mainViewModel.allEmployees.observe(this, Observer { employeesDataList ->
+            viewAdapter.updateList(employeesDataList)
+        })
+    }
+
+    private fun initialized() {
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel.getAll()
         var regisIntent = Intent(this, RegistrationActivity::class.java)
         var infoIntent = Intent(this, InfomationActivity::class.java)
         var spacing = VerticalSpaceItemDecoration(14)
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val employeesService = ApiInstance.getRetrofit().create(EmployeesService::class.java)
-        val employees = employeesService.getEmployees()
 
-        employees.enqueue(object : Callback<ArrayList<Employees>> {
-            override fun onFailure(call: Call<ArrayList<Employees>>?, t: Throwable?) {
-                Log.d("FAILED", t?.message.toString())
-
-            }
-
-            override fun onResponse(call: Call<ArrayList<Employees>>?, response: Response<ArrayList<Employees>>?) {
-                if (response?.body() != null) {
-                    viewAdapter.updateList(response.body())
-                }
-            }
-
-
-        })
         rcc_em_list.adapter = viewAdapter
         rcc_em_list.addItemDecoration(spacing)
         rcc_em_list.layoutManager = LinearLayoutManager(this)
@@ -78,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         viewAdapter.notifyDataSetChanged()
     }
+
     interface ItemClickHandler {
         fun setOnItemClickHandler(tempEmployId: Int)
     }

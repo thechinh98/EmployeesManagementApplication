@@ -1,8 +1,8 @@
-package com.example.employeesmanagermentapplication
+package com.example.employeesmanagermentapplication.Items
 
 import com.google.gson.annotations.SerializedName
 
-class Employees{
+class EmployeesReceive{
     @SerializedName("id")
     var id : Int? = null
     @SerializedName("employee_name")

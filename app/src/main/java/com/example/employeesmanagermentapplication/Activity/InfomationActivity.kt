@@ -3,69 +3,64 @@ package com.example.employeesmanagermentapplication.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.employeesmanagermentapplication.ApiInstance
-import com.example.employeesmanagermentapplication.Employees
-import com.example.employeesmanagermentapplication.EmployeesService
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.example.employeesmanagermentapplication.Items.EmployeesReceive
 import com.example.employeesmanagermentapplication.R
+import com.example.employeesmanagermentapplication.ViewModel.InfomationViewModel
 import kotlinx.android.synthetic.main.activity_infomation.*
 import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class InfomationActivity : AppCompatActivity() {
 
+    lateinit var employees: Call<EmployeesReceive>
+    private lateinit var infomationViewModel: InfomationViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
-        var mainIntent = Intent(this, MainActivity::class.java)
-        var editIntent = Intent(this, EditActivity::class.java)
-        var comeIntent = intent
-        var tempEmployId = intent.getIntExtra("TEMP_EM_ID", 0)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_infomation)
-        val employeesService = ApiInstance.getRetrofit().create(EmployeesService::class.java)
-        val employees = employeesService.getEmployeesById(tempEmployId)
+        initialize()
+        dataBinding()
 
-        employees.enqueue(object : Callback<Employees> {
-            override fun onFailure(call: Call<Employees>?, t: Throwable?) {
-                Log.d("FAILED", t?.message.toString())
-            }
+    }
 
-            override fun onResponse(call: Call<Employees>?, response: Response<Employees>?) {
-                if (response?.body() != null) {
-                    txt_id.text = response.body().id.toString()
-                    txt_name.text = response.body().emName
-                    txt_age.text = response.body().age.toString()
-                    txt_salary.text = response.body().salary.toString()
-                }
-            }
-
+    private fun dataBinding() {
+        infomationViewModel.employeesData.observe(this, Observer { employees ->
+            showEmployeesInfo(employees)
         })
-        btn_save.setOnClickListener {
+    }
+
+    private fun showEmployeesInfo(employees: EmployeesReceive?) {
+        txt_id.text = employees?.id.toString()
+        txt_name.text = employees?.emName
+        txt_age.text = employees?.age.toString()
+        txt_salary.text = employees?.salary.toString()
+    }
+
+    private fun initialize() {
+        infomationViewModel = ViewModelProviders.of(this).get(InfomationViewModel::class.java)
+
+        var tempEmployId = intent.getIntExtra("TEMP_EM_ID", 0)
+        infomationViewModel.getEmployeesById(tempEmployId)
+
+        btn_save_edit.setOnClickListener {
             var tempId = txt_id.text.toString().toInt()
+            var editIntent = Intent(this, EditActivity::class.java)
             editIntent.putExtra("TEMP_EM_ID", tempId)
             startActivity(editIntent)
         }
+
         btn_delete.setOnClickListener {
             val alertDialog: AlertDialog? = this?.let {
                 val builder = AlertDialog.Builder(it)
                 builder.apply {
                     setPositiveButton("Yes",
                         DialogInterface.OnClickListener { dialog, id ->
-                            var deleteEmployees = employeesService.deleteEmById(txt_id.text.toString().toInt())
-                            deleteEmployees.enqueue(object : Callback<Employees> {
-                                override fun onFailure(call: Call<Employees>?, t: Throwable?) {
-                                    Log.d("FAILED", t?.message.toString())
-                                }
-
-                                override fun onResponse(call: Call<Employees>?, response: Response<Employees>?) {
-                                    Toast.makeText(applicationContext, "Success", Toast.LENGTH_SHORT).show()
-                                    startActivity(mainIntent)
-                                }
-
-                            })
+                            var mainIntent = Intent(context, MainActivity::class.java)
+                            infomationViewModel.deleteEmployeesById(txt_id.text.toString().toInt())
+                            startActivity(mainIntent)
                         })
                     setNegativeButton("Cancel",
                         DialogInterface.OnClickListener { dialog, id ->
@@ -77,8 +72,12 @@ class InfomationActivity : AppCompatActivity() {
                 builder.create()
             }
             alertDialog?.show()
+        }
 
+        btn_back.setOnClickListener {
+            var mainIntent = Intent(this, MainActivity::class.java)
+            startActivity(mainIntent)
+            finish()
         }
     }
-
 }

@@ -5,11 +5,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.employeesmanagermentapplication.Activity.MainActivity
+import com.example.employeesmanagermentapplication.Items.EmployeesReceive
 import kotlinx.android.synthetic.main.items_employees_list.view.*
 
-class AdapterEmployeesList() :
+class AdapterEmployeesList(var myEmployeesList : ArrayList<EmployeesReceive>) :
     RecyclerView.Adapter<AdapterEmployeesList.MyViewHolder>() {
-    var myEmployeesList = ArrayList<Employees>()
+
     var callBack : MainActivity.ItemClickHandler? = null
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.items_employees_list, parent, false)
@@ -24,7 +25,7 @@ class AdapterEmployeesList() :
     }
 
     class MyViewHolder(val view : View) : RecyclerView.ViewHolder(view){
-        fun initView(itemsEmployees : Employees, callBack : MainActivity.ItemClickHandler){
+        fun initView(itemsEmployees : EmployeesReceive, callBack : MainActivity.ItemClickHandler){
             view.txt_id.text = itemsEmployees.id.toString()
             view.txt_name.text = itemsEmployees.emName
             view.txt_age.text = itemsEmployees.age.toString()
@@ -34,7 +35,7 @@ class AdapterEmployeesList() :
             }
         }
     }
-    fun updateList(myEmList : ArrayList<Employees>){
+    fun updateList(myEmList : ArrayList<EmployeesReceive>){
         myEmployeesList = myEmList
         notifyDataSetChanged()
     }
